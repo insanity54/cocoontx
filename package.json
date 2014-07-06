@@ -1,0 +1,15 @@
+{
+  "name": "cocoontx",
+  "version": "0.0.0",
+  "description": "helps you get cocoonjs files from your compy to your phone",
+  "main": "app.js",
+  "dependencies": {
+    "node-zip": "~1.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Chris Grimmett <chris@grimtech.net>",
+  "license": "BSD-2-Clause"
+}
