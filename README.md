@@ -20,10 +20,11 @@ Install
 -------
 
 - `$ npm install`
-- create a file config.json in the app root containing:
+- create a file config.json in the app root containing similar (tweak it for your machine):
 ```
 {
-    APPDIR: '/home/chris/scripts/cocoonjs-apps'
+    "APPDIR": "/home/chris/scripts/cocoonjs-apps",
+    "PORT": 28349    
 }
 ```
 - `$ npm start`
