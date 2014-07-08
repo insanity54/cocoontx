@@ -2,9 +2,14 @@
 <html>
 <head>
 	<title>CocoonTX</title>
+	<link rel="stylesheet" type="text/css" href="custom.css">
 </head>
 <body>
 
+  {% if error %}
+  <div id="error">{{ error }}</div>
+  {% endif %}
+  
   <ul>
     {% for project in projects %}
     

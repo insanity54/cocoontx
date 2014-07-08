@@ -22,9 +22,12 @@ console.log('>>> app dir is: ' + nconf.get('APPDIR'));
 app.set('appDir', nconf.get('APPDIR'));
 app.set('port', nconf.get('PORT'));
 
-app.use(express.static(app.get('appDir')));
+app.use(express.static(app.get('appDir'))); // serve the cocoonjs project files
+app.use(express.static(__dirname + '/public/fonts')); // serve the css, fonts, js
+app.use(express.static(__dirname + '/public/css'));
+app.use(express.static(__dirname + '/public/js'));
 
-nunjucksEnv = new nunjucks.Environment( new nunjucks.FileSystemLoader(__dirname + '/tpl'), {
+nunjucksEnv = new nunjucks.Environment( new nunjucks.FileSystemLoader(__dirname + '/public/tpl'), {
     autoescape: true });
 nunjucksEnv.express(app);
 
@@ -124,22 +127,29 @@ function generate(req, res) {
     });
 }
 
+
+
 	
 
 // when GET download link
 // zip app directory
 // serve zipped project
 app.get('/project/:proj', function(req, res) {
-    console.log('serving project');
     var proj = req.params.proj;
     var appDir = app.get('appDir');
     
+    console.log('serving project ' + proj);
 
     // get files in project directory
     fs.readdir(appDir + '/' + proj,
 	       function(err, files) {
 		   if (err) return res.send(500, 'error of some sort: ' + err);
-
+		   if (files.length == 0) {
+		       console.log('no files');
+		       console.log('error code 204 is: ' + http.STATUS_CODES[204]);
+		       res.send('error 204. No files in project.');
+		   }
+		   
 		   console.log('files object type: ' + typeof(files));
 		   console.log('files in project: ' + files);
 		   console.dir(files);
@@ -152,6 +162,13 @@ app.get('/project/:proj', function(req, res) {
 		   console.log('files in proj: ' + files);
 		   console.log('total files: ' + totalFiles);
 
+
+//		   if (totalFiles == 0) {
+//		       console.log('this proj has no files, it has ' + totalFiles + '<');
+//		       return res.send(204, 'This project contains no files');
+//		       //res.send(204);
+//		   }
+		   
 		   // for each file
 		   //   fs read file (takes time)
 		   //     z.file (takes time)
