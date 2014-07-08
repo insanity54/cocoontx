@@ -8,7 +8,7 @@
   <ul>
     {% for project in projects %}
     
-    <li>{{ project }}</li>
+    <li><a href="/project/{{ project }}">{{ project }}</a> <img src="/img/{{ project }}" /></li>
     
     {% endfor %}
   </ul>
