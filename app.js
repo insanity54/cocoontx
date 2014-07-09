@@ -72,7 +72,7 @@ app.get('/', generate);
 app.get('/img/:proj', function(req, res) {
 
     console.log('got ' + req.params.proj);
-    qr.create(srv.address + ':' + app.get('port') + '/project/' + req.params.proj,
+    qr.create('http://' + srv.address + ':' + app.get('port') + '/project/' + req.params.proj + '.zip',
 	      function(err, png) {
 		  res.writeHead(200, {"Content-Type": "image/png" });
 		  png.pipe(res);
@@ -137,6 +137,10 @@ function generate(req, res) {
 app.get('/project/:proj', function(req, res) {
     var proj = req.params.proj;
     var appDir = app.get('appDir');
+
+    // remove file extension if there is one
+
+    proj = proj.substr(0, proj.lastIndexOf('.'));
     
     console.log('serving project ' + proj);
 
