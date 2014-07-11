@@ -127,7 +127,37 @@ function generate(req, res) {
     });
 }
 
-
+/**
+ * walk
+ *
+ * Walk a directory and get an array of all the files & dirs
+ * Thanks to http://stackoverflow.com/a/5827895
+ *
+ * @param {string} dir    an absolute path to the dir to walk
+ * @callback done         (err, {Array} results) 
+ */
+var walk = function(dir, done) {
+    var results = [];
+    fs.readdir(dir, function(err, list) {
+	if (err) return done(err);
+	var pending = list.length;
+	if (!pending) return done(null, results);
+	list.forEach(function(file) {
+	    file = dir + '/' + file;
+	    fs.stat(file, function(err, stat) {
+		if (stat && stat.isDirectory()) {
+		    walk(file, function(err, res) {
+			results = results.concat(res);
+			if (!--pending) done(null, results);
+		    });
+		} else {
+		    results.push(file);
+		    if (!--pending) done(null, results);
+		}
+	    });
+	});
+    });
+};
 
 	
 
@@ -135,90 +165,41 @@ function generate(req, res) {
 // zip app directory
 // serve zipped project
 app.get('/project/:proj', function(req, res) {
-    var proj = req.params.proj;
+
     var appDir = app.get('appDir');
-
-    // remove file extension if there is one
-
-    proj = proj.substr(0, proj.lastIndexOf('.'));
+    var proj = req.params.proj;
+    var proj = proj.substr(0, proj.lastIndexOf('.'));
     
-    console.log('serving project ' + proj);
-
-    // get files in project directory
-    fs.readdir(appDir + '/' + proj,
-	       function(err, files) {
-		   if (err) return res.send(500, 'error of some sort: ' + err);
-		   if (files.length == 0) {
-		       console.log('no files');
-		       console.log('error code 204 is: ' + http.STATUS_CODES[204]);
-		       res.send('error 204. No files in project.');
-		   }
-		   
-		   console.log('files object type: ' + typeof(files));
-		   console.log('files in project: ' + files);
-		   console.dir(files);
-		   
-		   var totalFiles = files.length;
-		   var zippedFiles = 0;
-		   var z = new JSZip();
-		   
-
-		   console.log('files in proj: ' + files);
-		   console.log('total files: ' + totalFiles);
+    
 
 
-//		   if (totalFiles == 0) {
-//		       console.log('this proj has no files, it has ' + totalFiles + '<');
-//		       return res.send(204, 'This project contains no files');
-//		       //res.send(204);
-//		   }
-		   
-		   // for each file
-		   //   fs read file (takes time)
-		   //     z.file (takes time)
-		   //       zippedFiles ++
-		   //
-		   // endfor
-		   //
-		   // if zippedFiles == totalFiles
-		   //   write zip file to res
-		   //
-		   
-		   
-		   // for (i = 0; i < totalFiles; i++) {
-		   //     console.log(' adding file: ' + app.get('appDir') + '/' + files[i]);
-		   //     z.file(app.get('appDir') + '/' + files[i]);
+    walk(appDir + '/' + proj, function(err, results) {
+	if (err) throw err;
 
-		       
-		       
-		   // }
+	console.dir(results);
 
-		   
-		   
-		   
-		   files.forEach(function(f, index, arr) {
-		       console.log('adding file: ' + appDir + '/' + proj + '/' + f);
-		       fs.readFile(appDir + '/' + proj + '/' + f,
-				   function(err, data) {
-				       if (err) console.log('couldnt read file ' + f + ': ' + err); // return res.send(500, 'couldn\'t read file ' + f + ' in project');
-				       // file is read, add to zip
-				       z.file(f, data);
+	var totalFiles = results.length;
+	var zippedFiles = 0;
+        var z = new JSZip();
+	    
+	
+	results.forEach(function(file) {
+	    fs.readFile(file, function(err, data) {
+		if (err) throw err;
+		z.file(file.substring(appDir.length, file.length), data);
+		zippedFiles ++;
 
-				       // count that we've added the file
-				       zippedFiles ++;
 
-				       if (zippedFiles == totalFiles) {
-					   console.log('>>>> ZIP GEN COMPLETE <<<<');
-					   var buffer = z.generate({ type:"nodebuffer" });
-					   res.writeHead(200, {"Content-Type": "application/zip" });
-					   res.write(buffer);
-					   res.end();
-					   
-				       }
-				       
-				   });
-		   });
-	       });    
+		if (zippedFiles >= totalFiles) {
+                    console.log('>>>> ZIP GEN COMPLETE <<<<');
+                    var buffer = z.generate({ type:"nodebuffer" });
+                    res.writeHead(200, {"Content-Type": "application/zip" });
+                    res.write(buffer);
+                    res.end();
+                }
+	    });
+	});
+    });
 });
 
 
