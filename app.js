@@ -11,18 +11,18 @@ var qr = require('./middleware/qr');
 var zip = require('./middleware/zip');
 
 
-nconf.env(['APPDIR', 'PORT'])
+nconf.env(['APPSDIR', 'PORT'])
      .file({ file: 'config.json' });
 
 nconf.defaults({
     'PORT': '29833'
 });
 
-console.log('>>> app dir is: ' + nconf.get('APPDIR'));
-app.set('appDir', nconf.get('APPDIR'));
+console.log('>>> apps dir is: ' + nconf.get('APPSDIR'));
+app.set('appsDir', nconf.get('APPSDIR'));
 app.set('port', nconf.get('PORT'));
 
-app.use(express.static(app.get('appDir'))); // serve the cocoonjs project files
+app.use(express.static(app.get('appsDir'))); // serve the cocoonjs project files
 app.use(express.static(__dirname + '/public/fonts')); // serve the css, fonts, js
 app.use(express.static(__dirname + '/public/css'));
 app.use(express.static(__dirname + '/public/js'));
@@ -117,7 +117,7 @@ function generate(req, res) {
     srv.address = addresses[0];
 
     // get apps
-    fs.readdir(app.get('appDir'), function(err, files) {
+    fs.readdir(app.get('appsDir'), function(err, files) {
 
 	
 	res.render('index.html', {
@@ -166,14 +166,14 @@ var walk = function(dir, done) {
 // serve zipped project
 app.get('/project/:proj', function(req, res) {
 
-    var appDir = app.get('appDir');
     var proj = req.params.proj;
     var proj = proj.substr(0, proj.lastIndexOf('.'));
+    var appsDir = app.get('appsDir');
+    var appDir = appsDir + '/' + proj;
     
     
 
-
-    walk(appDir + '/' + proj, function(err, results) {
+    walk(appDir, function(err, results) {
 	if (err) throw err;
 
 	console.dir(results);
@@ -181,20 +181,21 @@ app.get('/project/:proj', function(req, res) {
 	var totalFiles = results.length;
 	var zippedFiles = 0;
         var z = new JSZip();
-	    
 	
-	results.forEach(function(file) {
-	    fs.readFile(file, function(err, data) {
+	results.forEach(function(f) {
+	    console.log('iterating thru file ' + f);
+	    
+	    fs.readFile(f, function(err, data) {
 		if (err) throw err;
-		z.file(file.substring(appDir.length, file.length), data);
+		console.log('doing this: ' + f.substring(appDir.length, f.length));
+		z.file(f.substring(appDir.length, f.length), data);
 		zippedFiles ++;
-
 
 		if (zippedFiles >= totalFiles) {
                     console.log('>>>> ZIP GEN COMPLETE <<<<');
                     var buffer = z.generate({ type:"nodebuffer" });
                     res.writeHead(200, {"Content-Type": "application/zip" });
-                    res.write(buffer);
+                    res.write(buffer, 'utf8');
                     res.end();
                 }
 	    });
