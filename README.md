@@ -1,4 +1,7 @@
 =======
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/insanity54/cocoontx.svg)](https://greenkeeper.io/)
+
 CocoonTX
 ========
 
